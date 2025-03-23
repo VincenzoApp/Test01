@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <link rel="manifest" href="manifest.json"> 
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tres en Raya</title>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.3.2"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f4f4f4;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        h1 {
+            color: #333;
+        }
+
+        #game-container {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #game-board {
+            display: grid;
+            grid-template-columns: repeat(3, 100px);
+            grid-template-rows: repeat(3, 100px);
+            gap: 5px;
+            margin: 20px auto;
+            width: 315px;
+        }
+
+        .cell {
+            width: 100px;
+            height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            font-weight: bold;
+            border: 2px solid #3333334a;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+
+        .cell:hover {
+            background-color: #ddd;
+        }
+
+        .winning-cell {
+            background-color: lightgreen !important;
+        }
+
+        .last-move {
+            background-color: lightgray !important;
+        }
+
+        .draw-cell {
+            background-color: rgba(255, 255, 0, 0.299) !important;
+            transition: background-color 0.5s ease-in-out;
+        }
+
+        #reset-btn {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 18px;
+            background-color: #ff6347;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        #reset-btn:hover {
+            background-color: #d9534f;
+        }
+
+        #scoreboard {
+            width: 100%;
+            background-color: white;
+            padding: 10px 0;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            font-size: 20px;
+            box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.2);
+            position: fixed;
+            bottom: 0;
+            left: 0;
+        }
+
+        .score {
+            padding: 10px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+
+        #mode-select {
+            margin-top: 20px;
+            font-size: 18px;
+        }
+
+        .btn {
+            margin: 5px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #4caf4f00;
+            color: #ff6347;
+            border: solid 1px #ff6347;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+        }
+        .btn:hover {
+            background-color: #ddd;
+        }
+        .btn.selected {
+            background-color: #ff6347;
+            color: white;
+        }
+
+        #aiDifficultySelection {
+            display: none;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Tres en Raya</h1>
+
+    <!-- Selector de modo -->
+    <div id="mode-select">
+        <button class="btn selected" id="mode-1v1" onclick="setGameMode('1v1')">1 vs 1</button>
+        <button class="btn" id="mode-1vAI" onclick="setGameMode('1vAI')">1 vs IA</button>
+    </div>
+
+    <!-- Selector de dificultad -->
+    <div id="aiDifficultySelection">
+        <button class="btn" id="difficulty-easy" onclick="setDifficulty('easy')">Fácil</button>
+        <button class="btn selected" id="difficulty-medium" onclick="setDifficulty('medium')">Intermedio</button>
+        <button class="btn" id="difficulty-hard" onclick="setDifficulty('hard')">Difícil</button>
+    </div>
+
+    <div id="game-container">
+        <div id="game-board">
+            <div class="cell" onclick="makeMove(0)"></div>
+            <div class="cell" onclick="makeMove(1)"></div>
+            <div class="cell" onclick="makeMove(2)"></div>
+            <div class="cell" onclick="makeMove(3)"></div>
+            <div class="cell" onclick="makeMove(4)"></div>
+            <div class="cell" onclick="makeMove(5)"></div>
+            <div class="cell" onclick="makeMove(6)"></div>
+            <div class="cell" onclick="makeMove(7)"></div>
+            <div class="cell" onclick="makeMove(8)"></div>
+        </div>
+
+        <button id="reset-btn" onclick="resetGame()">Reset</button>
+    </div>
+
+    <!-- Marcador -->
+    <div id="scoreboard">
+        <div class="score"><span id="player1Label">X</span>: <span id="scoreX">0</span></div>
+        <div class="score">Empates: <span id="scoreDraws">0</span></div>
+        <div class="score"><span id="player2Label">O</span>: <span id="scoreO">0</span></div>
+    </div>
+
+    <script>
+        let currentPlayer = 'X';
+        let board = ['', '', '', '', '', '', '', '', ''];
+        let gameOver = false;
+        let scoreX = 0;
+        let scoreO = 0;
+        let scoreDraws = 0;
+        let lastMoveIndex = null;
+        let gameMode = '1v1';  // Modo predeterminado: 1 vs 1
+        let difficulty = 'medium'; // Dificultad predeterminada: Intermedio
+        let lastWinner = null; // Guardará 'X', 'O' o null (empate)
+
+        // Cambiar el modo de juego
+        function setGameMode(mode) {
+            gameMode = mode;
+            resetGame(); // Reiniciar el juego al cambiar de modo
+            resetScores(); // Reiniciar los puntajes al cambiar de modo
+
+            // Actualizar los botones seleccionados
+            document.getElementById('mode-1v1').classList.remove('selected');
+            document.getElementById('mode-1vAI').classList.remove('selected');
+            document.getElementById(`mode-${mode}`).classList.add('selected');
+
+            // Mostrar u ocultar el selector de dificultad
+            if (mode === '1vAI') {
+                document.getElementById('aiDifficultySelection').style.display = 'block';
+                document.getElementById('player1Label').textContent = 'Tú';
+                document.getElementById('player2Label').textContent = 'IA';
+            } else {
+                document.getElementById('aiDifficultySelection').style.display = 'none';
+                document.getElementById('player1Label').textContent = 'X';
+                document.getElementById('player2Label').textContent = 'O';
+            }
+        }
+
+        // Cambiar la dificultad de la IA
+        function setDifficulty(diff) {
+            difficulty = diff;
+            document.getElementById('difficulty-easy').classList.remove('selected');
+            document.getElementById('difficulty-medium').classList.remove('selected');
+            document.getElementById('difficulty-hard').classList.remove('selected');
+            document.getElementById(`difficulty-${diff}`).classList.add('selected');
+        }
+
+        // Reiniciar el juego
+        function resetGame() {
+            board = ['', '', '', '', '', '', '', '', ''];
+            Array.from(document.getElementsByClassName('cell')).forEach(cell => cell.textContent = '');
+            Array.from(document.getElementsByClassName('cell')).forEach(cell => cell.classList.remove('last-move', 'winning-cell'));
+            gameOver = false;
+
+            // Asignar el primer turno según el último ganador
+            if (lastWinner === 'X') {
+                currentPlayer = 'X'; // Tú empiezas si ganaste
+            } else if (lastWinner === 'O') {
+                currentPlayer = 'O'; // La IA empieza si ganó
+            } else {
+                // En caso de empate, mantener el turno anterior
+                currentPlayer = currentPlayer; // No cambia
+            }
+
+            // Si es el turno de la IA, hacer su movimiento
+            if (gameMode === '1vAI' && currentPlayer === 'O') {
+                setTimeout(() => aiMove(), 500); // Pequeño retraso para simular pensamiento
+            }
+        }
+
+        // Lógica del juego
+        function makeMove(index) {
+            if (board[index] === '' && !gameOver) {
+                if (lastMoveIndex !== null) {
+                    document.getElementsByClassName('cell')[lastMoveIndex].classList.remove('last-move');
+                }
+
+                board[index] = currentPlayer;
+                let cell = document.getElementsByClassName('cell')[index];
+                cell.textContent = currentPlayer;
+                cell.classList.add('last-move');
+
+                lastMoveIndex = index;
+
+                if (checkWinner()) {
+                    updateScore(currentPlayer);
+                    lastWinner = currentPlayer; // Guardar el último ganador
+                    gameOver = true;
+                    shootConfetti(); // 🎉 Lanzar confeti
+                } else if (board.every(cell => cell !== '')) {
+                    scoreDraws++;
+                    document.getElementById('scoreDraws').textContent = scoreDraws;
+                    lastWinner = null; // Guardar como empate
+                    gameOver = true;
+                    animateDraw(); // 🟡 Efecto de empate
+                } else {
+                    if (gameMode === '1vAI' && currentPlayer === 'X') {
+                        currentPlayer = 'O';
+                        aiMove();
+                    } else {
+                        currentPlayer = (currentPlayer === 'X') ? 'O' : 'X';
+                    }
+                }
+            }
+        }
+
+        // Movimiento de la IA
+        function aiMove() {
+            let bestMove;
+            if (difficulty === 'easy') {
+                bestMove = getEasyMove();
+            } else if (difficulty === 'medium') {
+                bestMove = getMediumMove();
+            } else {
+                bestMove = minimax(board, 'O');
+            }
+
+            makeMove(bestMove.index);
+        }
+
+        // Lógica para la dificultad fácil
+        function getEasyMove() {
+            let availableMoves = board.map((cell, index) => cell === '' ? index : -1).filter(index => index !== -1);
+            return { index: availableMoves[Math.floor(Math.random() * availableMoves.length)] };
+        }
+
+        // Lógica para la dificultad intermedia
+        function getMediumMove() {
+            let availableMoves = board.map((cell, index) => cell === '' ? index : -1).filter(index => index !== -1);
+            for (let i = 0; i < availableMoves.length; i++) {
+                let move = availableMoves[i];
+                board[move] = 'O'; // Simular movimiento de la IA
+
+                if (checkWinnerForPlayer(board, 'O')) {
+                    board[move] = '';
+                    return { index: move }; // Bloquear movimiento ganador
+                }
+
+                board[move] = 'X'; // Simular movimiento del jugador
+                if (checkWinnerForPlayer(board, 'X')) {
+                    board[move] = '';
+                    return { index: move }; // Bloquear movimiento del jugador
+                }
+
+                board[move] = ''; // Deshacer movimiento
+            }
+
+            // Si no hay amenazas, mover aleatoriamente
+            return { index: availableMoves[Math.floor(Math.random() * availableMoves.length)] };
+        }
+
+        // Algoritmo Minimax para la dificultad difícil
+        function minimax(board, player) {
+            const opponent = player === 'X' ? 'O' : 'X';
+            let availableMoves = board.map((cell, index) => cell === '' ? index : -1).filter(index => index !== -1);
+
+            if (checkWinnerForPlayer(board, 'X')) return { score: -10 };
+            if (checkWinnerForPlayer(board, 'O')) return { score: 10 };
+            if (availableMoves.length === 0) return { score: 0 };
+
+            let moves = [];
+
+            for (let i = 0; i < availableMoves.length; i++) {
+                let move = availableMoves[i];
+                board[move] = player;
+
+                let result = minimax(board, opponent);
+                moves.push({ index: move, score: result.score });
+
+                board[move] = ''; // Deshacer movimiento
+            }
+
+            let bestMove = null;
+
+            if (player === 'O') {
+                let bestScore = -Infinity;
+                for (let i = 0; i < moves.length; i++) {
+                    if (moves[i].score > bestScore) {
+                        bestScore = moves[i].score;
+                        bestMove = moves[i];
+                    }
+                }
+            } else {
+                let bestScore = Infinity;
+                for (let i = 0; i < moves.length; i++) {
+                    if (moves[i].score < bestScore) {
+                        bestScore = moves[i].score;
+                        bestMove = moves[i];
+                    }
+                }
+            }
+
+            return bestMove;
+        }
+
+        // Verificar si hay un ganador
+        function checkWinner() {
+            const winningCombos = [
+                [0, 1, 2], [3, 4, 5], [6, 7, 8], 
+                [0, 3, 6], [1, 4, 7], [2, 5, 8], 
+                [0, 4, 8], [2, 4, 6]
+            ];
+            
+            for (const combo of winningCombos) {
+                const [a, b, c] = combo;
+                if (board[a] === currentPlayer && board[b] === currentPlayer && board[c] === currentPlayer) {
+                    highlightWinningCells(combo);
+                    gameOver = true;
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        // Verificar si un jugador específico ha ganado
+        function checkWinnerForPlayer(board, player) {
+            const winningCombos = [
+                [0, 1, 2], [3, 4, 5], [6, 7, 8], 
+                [0, 3, 6], [1, 4, 7], [2, 5, 8], 
+                [0, 4, 8], [2, 4, 6]
+            ];
+
+            for (const combo of winningCombos) {
+                const [a, b, c] = combo;
+                if (board[a] === player && board[b] === player && board[c] === player) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        // Resaltar las celdas ganadoras
+        function highlightWinningCells(combo) {
+            combo.forEach(index => {
+                let cell = document.getElementsByClassName('cell')[index];
+                cell.classList.add('winning-cell');
+
+                if (index === lastMoveIndex) {
+                    cell.classList.remove('last-move');
+                }
+            });
+        }
+
+        // Actualizar el marcador
+        function updateScore(winner) {
+            if (winner === 'X') {
+                scoreX++;
+                document.getElementById('scoreX').textContent = scoreX;
+            } else {
+                scoreO++;
+                document.getElementById('scoreO').textContent = scoreO;
+            }
+        }
+
+        // Reiniciar los puntajes
+        function resetScores() {
+            scoreX = 0;
+            scoreO = 0;
+            scoreDraws = 0;
+            document.getElementById('scoreX').textContent = scoreX;
+            document.getElementById('scoreO').textContent = scoreO;
+            document.getElementById('scoreDraws').textContent = scoreDraws;
+        }
+
+        // Lanzar confeti
+        function shootConfetti() {
+            confetti({
+                particleCount: 100,
+                spread: 70,
+                origin: { y: 0.6 }
+            });
+        }
+
+        // Animación de empate
+        function animateDraw() {
+            const cells = document.querySelectorAll('.cell');
+            cells.forEach(cell => {
+                cell.classList.add('draw-cell');
+                setTimeout(() => {
+                    cell.classList.remove('draw-cell');
+                }, 500);
+            });
+        }
+    </script>
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('sw.js')
+            .then(() => console.log("Service Worker Registered"));
+    }
+</body>
+</html>
