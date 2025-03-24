@@ -1,31 +1,55 @@
 {
   "name": "Juegos Offline",
   "short_name": "Juegos",
+  "description": "Juegos divertidos para jugar sin conexión",  // Aggiunto per SEO e chiarezza
   "start_url": "/index.html",
   "scope": "/",
-  "display": "standalone",
-  "orientation": "portrait-primary",
-  "background_color": "#ffffff",
-  "theme_color": "#ff6347",
+  "display": "fullscreen",  // Oppure "fullscreen" per nascondere tutto
+  "orientation": "portrait-primary",  // Blocca in verticale (opzionale)
+  "background_color": "#ffffff",  // Colore dello splash screen
+  "theme_color": "#ff6347",  // Colore della barra di stato (Android)
   "icons": [
+    {
+      "src": "icon-72x72.png",
+      "sizes": "72x72",
+      "type": "image/png",
+      "purpose": "any maskable"  // Adattabile agli shape dei dispositivi
+    },
+    {
+      "src": "icon-144x144.png",
+      "sizes": "144x144",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
     {
       "src": "icon-192x192.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any maskable"  // Richiesto per Android
     },
     {
       "src": "icon-512x512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "icon-144x144.png",
-      "sizes": "144x144",
-      "type": "image/png"
+      "purpose": "any maskable"  // Richiesto per lo splash screen
     }
   ],
   "prefer_related_applications": false,
-  "categories": ["games", "entertainment"]
+  "categories": ["games", "entertainment"],
+  "screenshots": [  // Aggiunto per gli app store (opzionale)
+    {
+      "src": "screenshot1.png",
+      "sizes": "1080x1920",
+      "type": "image/png",
+      "label": "Juegos Offline - Schermata principale"
+    }
+  ],
+  "shortcuts": [  // Collegamenti rapidi (Android)
+    {
+      "name": "Juego Rápido",
+      "short_name": "Jugar",
+      "url": "/game.html",
+      "icons": [{ "src": "icon-game.png", "sizes": "96x96" }]
+    }
+  ]
 }
