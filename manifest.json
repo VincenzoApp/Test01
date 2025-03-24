@@ -2,19 +2,30 @@
   "name": "Juegos Offline",
   "short_name": "Juegos",
   "start_url": "/index.html",
+  "scope": "/",
   "display": "standalone",
+  "orientation": "portrait-primary",
   "background_color": "#ffffff",
   "theme_color": "#ff6347",
   "icons": [
     {
-      "src": "icon.png",
+      "src": "icon-192x192.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     },
     {
-      "src": "icon.png",
+      "src": "icon-512x512.png",
       "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-144x144.png",
+      "sizes": "144x144",
       "type": "image/png"
     }
-  ]
+  ],
+  "prefer_related_applications": false,
+  "categories": ["games", "entertainment"]
 }
