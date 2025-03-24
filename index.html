@@ -4,7 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tres en Raya</title>
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.3.2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.3.2/dist/confetti.browser.min.js"></script>
+    <!-- PWA Metadata -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#ff6347">
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -133,10 +136,22 @@
             display: none;
             margin-top: 20px;
         }
+
+        #offline-status {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 12px;
+            display: none;
+        }
     </style>
 </head>
 <body>
-
+    <div id="offline-status">Modo offline</div>
     <h1>Ciao Emelí</h1>
 
     <!-- Selector de modo -->
@@ -186,6 +201,50 @@
         let gameMode = '1v1';  // Modo predeterminado: 1 vs 1
         let difficulty = 'medium'; // Dificultad predeterminada: Intermedio
         let lastWinner = null; // Guardará 'X', 'O' o null (empate)
+
+        // Load saved scores on startup
+        loadScores();
+
+        // Check online status
+        window.addEventListener('online', updateOnlineStatus);
+        window.addEventListener('offline', updateOnlineStatus);
+        updateOnlineStatus();
+
+        function updateOnlineStatus() {
+            const offlineStatus = document.getElementById('offline-status');
+            if (navigator.onLine) {
+                offlineStatus.style.display = 'none';
+            } else {
+                offlineStatus.style.display = 'block';
+            }
+        }
+
+        // Save scores to localStorage
+        function saveScores() {
+            localStorage.setItem('tresEnRayaScores', JSON.stringify({
+                scoreX: scoreX,
+                scoreO: scoreO,
+                scoreDraws: scoreDraws
+            }));
+        }
+
+        // Load scores from localStorage
+        function loadScores() {
+            const savedScores = localStorage.getItem('tresEnRayaScores');
+            if (savedScores) {
+                const scores = JSON.parse(savedScores);
+                scoreX = scores.scoreX;
+                scoreO = scores.scoreO;
+                scoreDraws = scores.scoreDraws;
+                updateScoreDisplays();
+            }
+        }
+
+        function updateScoreDisplays() {
+            document.getElementById('scoreX').textContent = scoreX;
+            document.getElementById('scoreO').textContent = scoreO;
+            document.getElementById('scoreDraws').textContent = scoreDraws;
+        }
 
         // Cambiar el modo de juego
         function setGameMode(mode) {
@@ -267,6 +326,7 @@
                     lastWinner = null; // Guardar como empate
                     gameOver = true;
                     animateDraw(); // 🟡 Efecto de empate
+                    saveScores();
                 } else {
                     if (gameMode === '1vAI' && currentPlayer === 'X') {
                         currentPlayer = 'O';
@@ -424,6 +484,7 @@
                 scoreO++;
                 document.getElementById('scoreO').textContent = scoreO;
             }
+            saveScores();
         }
 
         // Reiniciar los puntajes
@@ -434,15 +495,18 @@
             document.getElementById('scoreX').textContent = scoreX;
             document.getElementById('scoreO').textContent = scoreO;
             document.getElementById('scoreDraws').textContent = scoreDraws;
+            saveScores();
         }
 
         // Lanzar confeti
         function shootConfetti() {
-            confetti({
-                particleCount: 100,
-                spread: 70,
-                origin: { y: 0.6 }
-            });
+            if (typeof confetti === 'function') {
+                confetti({
+                    particleCount: 100,
+                    spread: 70,
+                    origin: { y: 0.6 }
+                });
+            }
         }
 
         // Animación de empate
@@ -453,6 +517,21 @@
                 setTimeout(() => {
                     cell.classList.remove('draw-cell');
                 }, 500);
+            });
+        }
+    </script>
+
+    <script>
+        // Register service worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(registration => {
+                        console.log('ServiceWorker registration successful');
+                    })
+                    .catch(err => {
+                        console.log('ServiceWorker registration failed: ', err);
+                    });
             });
         }
     </script>
