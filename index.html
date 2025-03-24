@@ -2,12 +2,14 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <link rel="apple-touch-icon" href="icon.png">  <!-- Icona per iOS -->
+    <meta name="mobile-web-app-capable" content="yes">
+    <link rel="apple-touch-icon" href="icon.png">
+    <link rel="icon" sizes="192x192" href="icon-192x192.png">
     <title>Juegos para Emelí</title>
-    <link rel="manifest" href="/manifest.json">
+    <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#4CAF50">
     <style>
         body {
@@ -20,6 +22,7 @@
             display: flex;
             flex-direction: column;
             background-image: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            -webkit-tap-highlight-color: transparent;
         }
         
         h1 {
@@ -89,10 +92,28 @@
             border: 4px solid #ff6347;
             box-shadow: 0 4px 8px rgba(0,0,0,0.1);
         }
+        
+        #install-btn {
+            position: fixed;
+            bottom: 80px;
+            right: 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            font-size: 24px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            cursor: pointer;
+            display: none;
+            z-index: 1000;
+        }
     </style>
 </head>
 <body>
     <div id="offline-status">Modo offline</div>
+    <button id="install-btn" title="Instalar aplicación">+</button>
     
     <img src="icon.png" alt="Logo" class="header-image">
     <h1>¡Elige un Juego!</h1>
@@ -123,6 +144,26 @@
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
             deferredPrompt = e;
+            const installBtn = document.getElementById('install-btn');
+            installBtn.style.display = 'block';
+            
+            installBtn.addEventListener('click', () => {
+                installBtn.style.display = 'none';
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then((choiceResult) => {
+                    if (choiceResult.outcome === 'accepted') {
+                        console.log('Usuario aceptó instalar');
+                    } else {
+                        console.log('Usuario rechazó instalar');
+                    }
+                    deferredPrompt = null;
+                });
+            });
+        });
+        
+        window.addEventListener('appinstalled', () => {
+            console.log('App instalada');
+            document.getElementById('install-btn').style.display = 'none';
         });
         
         // Registrar Service Worker
@@ -142,6 +183,17 @@
         // Event listeners para estado de conexión
         window.addEventListener('online', updateOnlineStatus);
         window.addEventListener('offline', updateOnlineStatus);
+        
+        // Verificar si está en modo standalone
+        function isRunningStandalone() {
+            return (window.matchMedia('(display-mode: standalone)').matches || 
+                   window.navigator.standalone === true;
+        }
+        
+        // Si ya está instalada, ocultar el botón de instalación
+        if (isRunningStandalone()) {
+            document.getElementById('install-btn').style.display = 'none';
+        }
         
         // Inicializar
         updateOnlineStatus();
