@@ -6,10 +6,9 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="mobile-web-app-capable" content="yes">
-    <meta name="theme-color" content="#007bff">
     <title>Cuadrado Pillín</title>
     <link rel="manifest" href="manifest.json">
-    <link rel="apple-touch-icon" href="icon-192x192.png">
+    <meta name="theme-color" content="#007bff">
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -21,9 +20,6 @@
             margin: 0;
             flex-direction: column;
             -webkit-tap-highlight-color: transparent;
-            -webkit-touch-callout: none;
-            -webkit-user-select: none;
-            user-select: none;
         }
 
         .container {
@@ -56,7 +52,8 @@
             cursor: pointer;
             border-radius: 10px;
             transition: all 0.3s ease;
-            touch-action: manipulation;
+            user-select: none;
+            -webkit-user-select: none;
         }
 
         #score, #timer {
@@ -112,12 +109,16 @@
             display: none;
             z-index: 100;
         }
-
-        /* Prevent address bar from showing on mobile */
-        @media screen and (display-mode: standalone) {
-            body {
-                height: 100vh;
-                overflow: hidden;
+        
+        @media (max-height: 700px) {
+            #gameArea {
+                height: 300px;
+            }
+        }
+        
+        @media (max-height: 500px) {
+            #gameArea {
+                height: 200px;
             }
         }
     </style>
@@ -126,7 +127,7 @@
     <div id="offline-status">Modo offline</div>
     
     <div class="container">
-        <h1>Cuadrado Pillínx</h1>
+        <h1>Cuadrado Pillín</h1>
         <p>¡Atrapa el cuadrado lo más rápido que puedas en 30 segundos!</p>
         <div id="gameArea">
             <div id="square"></div>
@@ -141,58 +142,6 @@
     </div>
 
     <script>
-        // Force fullscreen on mobile devices
-        function launchIntoFullscreen() {
-            if (window.navigator.standalone) return;
-            
-            if (document.documentElement.requestFullscreen) {
-                document.documentElement.requestFullscreen();
-            } else if (document.documentElement.webkitRequestFullscreen) {
-                document.documentElement.webkitRequestFullscreen();
-            } else if (document.documentElement.msRequestFullscreen) {
-                document.documentElement.msRequestFullscreen();
-            }
-        }
-
-        // Hide address bar on mobile
-        function hideAddressBar() {
-            if (!window.navigator.standalone && !document.fullscreenElement) {
-                setTimeout(function() {
-                    window.scrollTo(0, 1);
-                }, 100);
-            }
-        }
-
-        // Prevent default touch behavior
-        document.addEventListener('touchmove', function(event) {
-            if (event.scale !== 1) { event.preventDefault(); }
-        }, { passive: false });
-
-        // Disable double tap zoom
-        let lastTouchEnd = 0;
-        document.addEventListener('touchend', function(event) {
-            const now = (new Date()).getTime();
-            if (now - lastTouchEnd <= 300) {
-                event.preventDefault();
-            }
-            lastTouchEnd = now;
-        }, false);
-
-        // Initialize fullscreen and hide address bar
-        window.addEventListener('load', function() {
-            launchIntoFullscreen();
-            hideAddressBar();
-            
-            // For iOS
-            if (window.navigator.standalone) {
-                document.body.style.height = '100vh';
-                document.body.style.overflow = 'hidden';
-            }
-        });
-
-        window.addEventListener('resize', hideAddressBar);
-        window.addEventListener('orientationchange', hideAddressBar);
-
         const square = document.getElementById('square');
         const gameArea = document.getElementById('gameArea');
         const scoreDisplay = document.getElementById('score');
@@ -309,19 +258,6 @@
             }
         });
 
-        // Add touch event for mobile
-        square.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            if (!gameStarted) {
-                startGame();
-            }
-            if (timeLeft > 0) {
-                score++;
-                scoreDisplay.textContent = `Puntos: ${score}`;
-                moveSquare();
-            }
-        }, { passive: false });
-
         restartBtn.addEventListener('click', resetGameState);
         backBtn.addEventListener('click', () => window.location.href = 'index.html');
 
@@ -336,6 +272,21 @@
 
         // Inicialización
         resetGameState();
+        
+        // Prevenir zoom en dispositivos móviles
+        document.addEventListener('gesturestart', function(e) {
+            e.preventDefault();
+        });
+        
+        // Prevenir doble tap para zoom
+        let lastTouchTime = 0;
+        document.addEventListener('touchend', function(event) {
+            const now = (new Date()).getTime();
+            if (now - lastTouchTime <= 300) {
+                event.preventDefault();
+            }
+            lastTouchTime = now;
+        }, false);
     </script>
 </body>
 </html>
