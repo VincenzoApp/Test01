@@ -2,7 +2,7 @@
   "name": "Juegos Offline",
   "short_name": "Juegos",
   "description": "Juegos divertidos para jugar sin conexión",
-  "start_url": "/index.html",
+  "start_url": "index.html",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
