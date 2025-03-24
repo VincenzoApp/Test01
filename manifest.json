@@ -1,11 +1,10 @@
 {
-  "name": "Juegos Online y Offline",
+  "name": "Juegos Offline",
   "short_name": "Juegos",
-  "description": "Colección de juegos que funcionan también offline",
   "start_url": "/index.html",
   "display": "standalone",
-  "background_color": "#f4f4f9",
-  "theme_color": "#4CAF50",
+  "background_color": "#ffffff",
+  "theme_color": "#ff6347",
   "icons": [
     {
       "src": "icon-192x192.png",
