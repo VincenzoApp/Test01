@@ -1,7 +1,11 @@
-const CACHE_NAME = 'tres-en-raya-v1';
+const CACHE_NAME = 'juegosv2';
 const ASSETS_TO_CACHE = [
+  '/',
+  '/index.html',
   '/tris.html',
-  'https://cdn.jsdelivr.net/npm/canvas-confetti@1.3.2/dist/confetti.browser.min.js'
+  'https://cdn.jsdelivr.net/npm/canvas-confetti@1.3.2/dist/confetti.browser.min.js',
+  '/icon-192x192.png',
+  '/icon-512x512.png'
 ];
 
 self.addEventListener('install', (event) => {
