@@ -255,4 +255,29 @@
         resetGameState();
     </script>
 </body>
+    <script>
+// Bloqueo completo para iOS
+document.addEventListener('DOMContentLoaded', function() {
+    // Bloquear gestos de zoom
+    document.addEventListener('gesturestart', function(e) {
+        e.preventDefault();
+    });
+    
+    // Bloquear scroll y bounce
+    document.addEventListener('touchmove', function(e) {
+        if(!e.target.classList.contains('scrollable')) { // Permite scroll solo en elementos con clase 'scrollable'
+            e.preventDefault();
+        }
+    }, { passive: false });
+    
+    // Solución para el viewport en iOS
+    function setViewportHeight() {
+        let vh = window.innerHeight * 0.01;
+        document.documentElement.style.setProperty('--vh', `${vh}px`);
+    }
+    
+    setViewportHeight();
+    window.addEventListener('resize', setViewportHeight);
+});
+</script>
 </html>
