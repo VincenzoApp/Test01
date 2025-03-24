@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cuadrado Pillín</title>
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#007bff">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            flex-direction: column;
+        }
+
+        .container {
+            text-align: center;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 90%;
+            max-width: 500px;
+            margin: 20px;
+        }
+
+        #gameArea {
+            position: relative;
+            width: 100%;
+            height: 400px;
+            background-color: #e0e0e0;
+            margin: 20px auto;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        #square {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            background-color: #007bff;
+            cursor: pointer;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+
+        #score, #timer {
+            font-size: 1.5em;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        #back-btn {
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: #ff6347;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        #back-btn:hover {
+            background-color: #e5533d;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Cuadrado Pillín</h1>
+        <p>¡Atrapa el cuadrado lo más rápido que puedas en 30 segundos!</p>
+        <div id="gameArea">
+            <div id="square"></div>
+        </div>
+        <p id="score">Puntos: 0</p>
+        <p id="timer">Tiempo: 30s</p>
+        <button id="back-btn" onclick="window.location.href='index.html'">Volver al Menú</button>
+    </div>
+
+    <script>
+        const square = document.getElementById('square');
+        const gameArea = document.getElementById('gameArea');
+        const scoreDisplay = document.getElementById('score');
+        const timerDisplay = document.getElementById('timer');
+        let score = 0;
+        let timeLeft = 30;
+        let timer;
+        let gameStarted = false;
+        let blinkInterval;
+
+        function moveSquare() {
+            const maxX = gameArea.offsetWidth - square.offsetWidth;
+            const maxY = gameArea.offsetHeight - square.offsetHeight;
+            const x = Math.random() * maxX;
+            const y = Math.random() * maxY;
+            square.style.left = `${x}px`;
+            square.style.top = `${y}px`;
+        }
+
+        function startBlinking() {
+            const colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff'];
+            let index = 0;
+            blinkInterval = setInterval(() => {
+                square.style.backgroundColor = colors[index];
+                index = (index + 1) % colors.length;
+            }, 500);
+        }
+
+        function stopBlinking() {
+            clearInterval(blinkInterval);
+        }
+
+        function startGame() {
+            if (gameStarted) return;
+            
+            gameStarted = true;
+            score = 0;
+            timeLeft = 30;
+            scoreDisplay.textContent = `Puntos: ${score}`;
+            timerDisplay.textContent = `Tiempo: ${timeLeft}s`;
+            square.style.display = 'block';
+            square.style.backgroundColor = '#007bff';
+            square.style.width = '50px';
+            square.style.height = '50px';
+            moveSquare();
+
+            timer = setInterval(() => {
+                timeLeft--;
+                timerDisplay.textContent = `Tiempo: ${timeLeft}s`;
+
+                if (timeLeft === 20) {
+                    square.style.backgroundColor = '#ff8c42';
+                    square.style.width = '40px';
+                    square.style.height = '40px';
+                }
+
+                if (timeLeft === 10) {
+                    square.style.backgroundColor = '#808080';
+                    square.style.width = '30px';
+                    square.style.height = '30px';
+                }
+
+                if (timeLeft === 5) {
+                    startBlinking();
+                }
+
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    stopBlinking();
+                    square.style.display = 'none';
+                    setTimeout(() => {
+                        alert(`¡Tiempo acabado! Puntuación: ${score}`);
+                    }, 100);
+                }
+            }, 1000);
+        }
+
+        square.addEventListener('click', () => {
+            if (!gameStarted) {
+                startGame();
+            }
+            if (timeLeft > 0) {
+                score++;
+                scoreDisplay.textContent = `Puntos: ${score}`;
+                moveSquare();
+            }
+        });
+
+        // Inicializar posición del cuadrado
+        moveSquare();
+    </script>
+</body>
+</html>
